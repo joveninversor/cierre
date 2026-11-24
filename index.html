@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cierre Programa JI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #161616; --line: #333333; --soft: #2A2A2A;
+    --text: #FFFFFF; --muted: #B4B4B4; --body: #D6D6D6;
+    --accent: #FF9C00; --accent-hi: #FFB340; --err: #FF5A4E; --err-bg: #2E0F0C;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Poppins, sans-serif; }
+  a { color: var(--accent); } a:hover { color: var(--accent-hi); }
+  button, input, textarea { font-family: inherit; }
+  .page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; }
+  .bg-logo { position: absolute; right: -160px; top: -120px; pointer-events: none; }
+  .wrap { width: 100%; max-width: 720px; padding: 48px 24px 32px; display: flex; flex-direction: column; gap: 40px; position: relative; }
+  @media (max-width: 480px) { .wrap { padding: 32px 16px 24px; } }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress .lbl { font-size: 13px; letter-spacing: .16em; font-weight: 600; color: var(--muted); }
+  .bars { display: flex; gap: 6px; }
+  .bars div { width: 32px; height: 4px; background: var(--line); }
+  .bars div.on { background: var(--accent); }
+
+  .step { display: none; flex-direction: column; gap: 36px; }
+  .step.active { display: flex; }
+  .kicker { display: flex; align-items: center; gap: 14px; }
+  .kicker i { width: 40px; height: 6px; background: var(--accent); display: block; }
+  .kicker span { font-size: 13px; letter-spacing: .22em; font-weight: 700; color: var(--accent); }
+  .h1 { font-size: clamp(38px, 9vw, 64px); line-height: .98; font-weight: 800; letter-spacing: -.03em; text-transform: uppercase; text-wrap: balance; margin: 0; }
+  .h2 { font-size: clamp(32px, 8vw, 52px); line-height: 1; font-weight: 800; letter-spacing: -.03em; text-transform: uppercase; text-wrap: balance; margin: 0; }
+  .lead { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 1.6; font-weight: 300; color: var(--body); text-wrap: pretty; }
+  .lead b { color: var(--text); font-weight: 600; }
+  .note { display: flex; gap: 14px; align-items: center; background: var(--panel); border-left: 4px solid var(--accent); padding: 16px 20px; font-size: 15px; line-height: 1.5; }
+  .note svg { flex: none; }
+  .sect { display: flex; flex-direction: column; gap: 8px; border-top: 2px solid var(--soft); padding-top: 28px; }
+  .sect .t { font-size: 22px; font-weight: 700; line-height: 1.25; }
+  .sect .s { font-size: 15px; color: var(--muted); font-weight: 300; }
+
+  .q { display: flex; flex-direction: column; gap: 14px; }
+  .q[hidden] { display: none; }
+  .qh { display: flex; gap: 12px; align-items: baseline; }
+  .qn { font-size: 14px; font-weight: 800; color: var(--accent); flex: none; min-width: 18px; }
+  .ql { font-size: 19px; font-weight: 600; line-height: 1.35; }
+  .ql .star { color: var(--accent); }
+  .ql .opt { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .hint { font-size: 14px; line-height: 1.5; color: var(--muted); font-weight: 300; padding-left: 30px; text-wrap: pretty; margin-top: -4px; }
+  .msg { display: none; font-size: 14px; color: var(--err); font-weight: 500; }
+  .q.err .msg { display: block; }
+
+  .opts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .opts button { font-size: 16px; font-weight: 400; min-height: 48px; padding: 0 22px; background: var(--panel); color: var(--text); border: 2px solid var(--line); cursor: pointer; border-radius: 0; }
+  .scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .scale button { min-height: 72px; padding: 10px 4px; background: var(--panel); color: var(--text); border: 2px solid var(--line); cursor: pointer; border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .scale button b { font-size: 24px; font-weight: 800; line-height: 1; }
+  .scale button small { font-size: 12px; font-weight: 500; line-height: 1.2; min-height: 15px; }
+  @media (max-width: 420px) { .scale button small { font-size: 10px; } }
+  .nps { display: flex; flex-direction: column; gap: 10px; }
+  .nps .scale { grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 6px; }
+  .nps .scale button { min-height: 56px; padding: 6px 0; }
+  .nps .scale button b { font-size: 20px; }
+  .nps .ends { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); font-weight: 500; }
+  @media (max-width: 560px) {
+    .nps .scale { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+    .nps .scale button { min-height: 52px; }
+  }
+  .opts button:hover, .scale button:hover { border-color: var(--accent); }
+  .q.err .opts button:not(.on), .q.err .scale button:not(.on) { border-color: var(--err); }
+  .opts button.on, .scale button.on { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+
+  textarea, input[type=text] { font-size: 16px; color: var(--text); background: var(--panel); border: 2px solid var(--line); border-radius: 0; outline: none; width: 100%; }
+  textarea { line-height: 1.55; padding: 16px 18px; resize: vertical; min-height: 120px; }
+  input[type=text] { padding: 0 18px; min-height: 52px; }
+  textarea:focus, input[type=text]:focus { border-color: var(--accent); }
+  textarea::placeholder, input::placeholder { color: #6E6E6E; }
+  .q.err textarea, .q.err input[type=text] { border-color: var(--err); }
+
+  /* Bloque Oracle Numeris */
+  .gift { background: var(--panel); border: 2px solid var(--accent); padding: 28px 24px; display: flex; flex-direction: column; gap: 18px; }
+  @media (max-width: 480px) { .gift { padding: 22px 16px; } }
+  .gift .badge { align-self: flex-start; background: var(--accent); color: var(--bg); font-size: 12px; letter-spacing: .18em; font-weight: 800; padding: 6px 10px; }
+  .gift .gt { font-size: clamp(26px, 6vw, 36px); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; text-transform: uppercase; }
+  .gift .gt em { font-style: normal; color: var(--accent); }
+  .gift p { margin: 0; font-size: 16px; line-height: 1.6; font-weight: 300; color: var(--body); }
+  .tvbox { display: flex; flex-direction: column; gap: 26px; border-top: 2px solid var(--soft); padding-top: 26px; }
+  .tvbox[hidden] { display: none; }
+  .tvfield { position: relative; }
+  .tvfield span { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 16px; pointer-events: none; }
+  .tvfield input { padding-left: 36px; }
+  .how { font-size: 14px; line-height: 1.55; color: var(--muted); font-weight: 300; padding-left: 30px; }
+  .how ol { margin: 6px 0 0; padding-left: 18px; }
+  .preview { display: none; font-size: 14px; line-height: 1.5; color: var(--body); background: #101010; border-left: 3px solid var(--accent); padding: 12px 14px; overflow-wrap: anywhere; }
+  .preview.show { display: block; }
+
+  .alert { display: none; font-size: 15px; color: var(--err); background: var(--err-bg); padding: 14px 18px; }
+  .alert.show { display: block; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-main { flex: 1; min-width: 200px; min-height: 60px; background: var(--accent); color: var(--bg); border: none; font-size: 17px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; border-radius: 0; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .btn-main:hover { background: var(--accent-hi); }
+  .btn-main[disabled] { opacity: .6; cursor: wait; }
+  .btn-ghost { min-height: 60px; padding: 0 28px; background: transparent; color: var(--text); border: 2px solid var(--line); font-size: 16px; font-weight: 600; cursor: pointer; border-radius: 0; }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .done { display: none; flex-direction: column; gap: 28px; padding: 40px 0; }
+  .done.active { display: flex; }
+  .check { width: 96px; height: 96px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+  .done p { margin: 0; font-size: 18px; line-height: 1.6; font-weight: 300; color: var(--body); max-width: 540px; }
+  .done p b { color: var(--text); font-weight: 600; }
+
+  .foot { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--soft); padding-top: 20px; margin-top: 8px; }
+  .foot div { font-size: 11px; font-weight: 200; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="logo" viewBox="0 0 47 47"><path d="M13.5 0H7V36.5C7 40.1 5.66667 41 5 41H0V46.5C11.6 48.5 13.8333 43 13.5 40V0Z"/><path d="M22.5 0H16.5V6.5H22.5V0Z"/><path d="M22.5 8H16.5V46.5H22.5V8Z"/><path d="M33 0H39.5V36.5C39.5 40.1 40.8333 41 41.5 41H46.5V46.5C34.9 48.5 32.6667 43 33 40V0Z"/><path d="M24 0H30V6.5H24V0Z"/><path d="M24 8H30V46.5H24V8Z"/></symbol>
+</svg>
+
+<div class="page">
+  <svg class="bg-logo" width="560" height="560" fill="#141414"><use href="#logo"/></svg>
+  <div class="wrap">
+
+    <div class="top">
+      <svg width="36" height="36" fill="#FF9C00"><use href="#logo"/></svg>
+      <div class="progress" id="progress">
+        <div class="lbl" id="stepLabel">PASO 1 DE 3</div>
+        <div class="bars"><div class="on"></div><div></div><div></div></div>
+      </div>
+    </div>
+
+    <!-- PASO 1 -->
+    <section class="step active" data-step="0">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="kicker"><i></i><span>CIERRE DEL PROGRAMA</span></div>
+        <h1 class="h1">Terminaste el Programa JI</h1>
+        <div class="lead">
+          <div>¡Felicitaciones! Si estás acá es porque llegaste al final del <b>Programa Joven Inversor</b>.</div>
+          <div>Queremos saber cómo fue tu experiencia completa: qué te sirvió, qué no, dónde estás hoy y qué cambiarías. Tus respuestas nos ayudan a que el programa siga en movimiento, mejorando y evolucionando.</div>
+          <div>Y al final te espera un <b>regalo de cierre</b>.</div>
+        </div>
+        <div class="note">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9C00" stroke-width="2"><path d="M4 10H20V21H4Z"/><path d="M8 10V3H16V10"/><path d="M12 14V17"/></svg>
+          <div>Tu feedback es anónimo, salvo que elijas dejarnos tu nombre o pedir el regalo del final. Solo lo leemos nosotros. ¡Muchas gracias!</div>
+        </div>
+      </div>
+      <div class="sect"><div class="t">Para encuadrar mejor tus comentarios</div><div class="s">Respondenos estas preguntas rápidas.</div></div>
+      <div id="s0"></div>
+      <div class="actions">
+        <button type="button" class="btn-main" data-go="next">
+          <span>Siguiente</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.5"><path d="M3 12H21"/><path d="M15 6L21 12L15 18"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- PASO 2 -->
+    <section class="step" data-step="1">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="kicker"><i></i><span>PARTE 2</span></div>
+        <h2 class="h2">Tu experiencia completa</h2>
+      </div>
+      <div id="s1"></div>
+      <div class="actions">
+        <button type="button" class="btn-ghost" data-go="back">Atrás</button>
+        <button type="button" class="btn-main" data-go="next">
+          <span>Siguiente</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.5"><path d="M3 12H21"/><path d="M15 6L21 12L15 18"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- PASO 3 -->
+    <section class="step" data-step="2">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="kicker"><i></i><span>PARTE 3</span></div>
+        <h2 class="h2">Tu regalo de cierre</h2>
+      </div>
+
+      <div class="gift">
+        <div class="badge">6 MESES SIN COSTO</div>
+        <div class="gt">Oracle Numeris<br><em>en tu TradingView</em></div>
+        <p>Por haber terminado el programa, te regalamos <b style="color:#fff;font-weight:600">6 meses de acceso a Oracle Numeris</b>. Para habilitártelo necesitamos tu usuario de TradingView.</p>
+
+        <div class="q" data-q="oracle">
+          <div class="qh"><div class="qn" data-num></div><div class="ql">¿Querés recibir Oracle Numeris por 6 meses? <span class="star">*</span></div></div>
+          <div class="opts" data-opts="Sí, lo quiero|No, gracias"></div>
+          <div class="msg">Elegí una opción para continuar.</div>
+        </div>
+
+        <div class="tvbox" id="tvbox" hidden>
+          <div class="q" data-q="tradingview">
+            <div class="qh"><div class="qn" data-num></div><div class="ql">Tu usuario de TradingView <span class="star">*</span></div></div>
+            <div class="how">
+              Es el nombre de usuario, no tu email. Para encontrarlo:
+              <ol>
+                <li>Entrá a TradingView y tocá tu foto de perfil.</li>
+                <li>Tu usuario aparece debajo de tu nombre (también está en el link de tu perfil: tradingview.com/u/<b style="color:#fff">usuario</b>).</li>
+              </ol>
+            </div>
+            <div class="tvfield"><span>@</span><input type="text" id="tv" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="tu_usuario"></div>
+            <div class="preview" id="tvPreview"></div>
+            <div class="msg" id="tvMsg">Ingresá tu usuario de TradingView.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="q" data-q="nombre">
+        <div class="qh"><div class="qn" data-num></div><div class="ql">Nombre y apellido <span class="star" id="nombreStar"></span><span class="opt" id="nombreOpt">(opcional)</span></div></div>
+        <div class="hint" id="nombreHint">De manera opcional y solo si vos querés, podés dejarnos tu nombre y apellido. Nos puede servir para charlar algún feedback directamente con vos por privado.</div>
+        <input type="text" id="nombre" autocomplete="name" placeholder="Tu nombre y apellido">
+        <div class="msg">Necesitamos tu nombre para asociar el acceso a tu cuenta.</div>
+      </div>
+
+      <div class="alert" id="sendError"></div>
+      <div class="actions">
+        <button type="button" class="btn-ghost" data-go="back">Atrás</button>
+        <button type="button" class="btn-main" id="submit">Enviar</button>
+      </div>
+    </section>
+
+    <!-- GRACIAS -->
+    <section class="done" id="done">
+      <div class="check"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.5"><path d="M4 12L10 18L20 6"/></svg></div>
+      <div class="h1">¡Gracias!</div>
+      <p id="doneText">Recibimos tu feedback. Gracias por haber sido parte del Programa Joven Inversor.</p>
+      <button type="button" class="btn-ghost" id="reset" style="align-self:flex-start;min-height:52px;font-size:15px">Enviar otra respuesta</button>
+    </section>
+
+    <div class="foot">
+      <svg width="18" height="18" fill="#FF9C00"><use href="#logo"/></svg>
+      <div>programa joven inversor</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ CONFIGURACIÓN ============
+// URL de la aplicación web de Google Apps Script que guarda las respuestas en la planilla.
+const SCRIPT_URL = '';
+
+// ============ PREGUNTAS ============
+// type: choice | scale | text. req: obligatoria.
+const STEPS = [
+  [
+    { id: 'asesor', type: 'choice', label: '¿Quién fue tu asesor/asesora?', opts: ['Rodri', 'Juan', 'Sele', 'Tobi'] },
+    { id: 'duracion', type: 'choice', label: '¿Cuánto tiempo te llevó completar el programa?', opts: ['3 meses o menos', '4 meses', '5 meses', '6 meses o más'] },
+    { id: 'llamadas', type: 'choice', label: '¿Cuántas llamadas 1 a 1 tuviste con tu asesor en total?', opts: ['Una', 'Dos', 'Tres', 'Cuatro', 'Cinco o más'] },
+    { id: 'encuentros', type: 'choice', label: '¿A qué parte de los encuentros grupales/clases en vivo asististe?', opts: ['A casi ninguno', 'A algunos', 'A la mayoría', 'A todos o casi todos'] },
+    { id: 'completo', type: 'choice', label: '¿Pudiste ver todo el contenido del programa?', opts: ['Sí, todo', 'Casi todo', 'Más o menos la mitad', 'Menos de la mitad'] }
+  ],
+  [
+    { id: 'avance_escala', type: 'scale', label: 'Mirando todo el recorrido, ¿cuánto sentís que avanzaste desde que empezaste el programa?', subs: ['Muy poco', '', '', '', 'Un montón'] },
+    { id: 'objetivo', type: 'text', req: true, label: '¿Cumpliste el objetivo con el que entraste al programa?', hint: 'Contanos dónde estabas cuando empezaste y dónde estás hoy.' },
+    { id: 'mejor', type: 'text', req: true, label: '¿Qué fue lo mejor/más útil del programa?' },
+    { id: 'mejorar', type: 'text', req: true, label: '¿Qué fue lo menos útil del programa y qué cambiarías?' },
+    { id: 'satisfaccion', type: 'scale', label: '¿Qué puntuación le darías a tu satisfacción general con el programa?', subs: ['Muy malo', 'Malo', 'Bueno', 'Muy bueno', 'Excelente'] },
+    { id: 'recomendaria', type: 'nps', label: 'Del 0 al 10, ¿qué tan probable es que le recomiendes el programa a un amigo o conocido?', ends: ['Nada probable', 'Muy probable'] },
+    { id: 'testimonio', type: 'text', req: false, label: '¿Nos dejarías un testimonio de tu experiencia?', hint: 'Unas líneas contando qué te dejó el programa. Opcional.' },
+    { id: 'testimonio_permiso', type: 'choice', req: false, showIf: a => !!(a.testimonio || '').trim(), label: '¿Podemos compartir tu testimonio?', opts: ['Sí, con mi nombre', 'Sí, de forma anónima', 'No, es solo para ustedes'] }
+  ]
+];
+
+const ORACLE_YES = 'Sí, lo quiero';
+const state = { step: 0, a: {}, sending: false };
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------- Construcción ----------
+function qHTML(q) {
+  const req = q.req !== false;
+  const label = `${esc(q.label)}${req ? ' <span class="star">*</span>' : (q.type === 'text' ? ' <span class="opt">(opcional)</span>' : '')}`;
+  let body = '';
+  if (q.type === 'choice') body = `<div class="opts">${q.opts.map(o => `<button type="button" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+  if (q.type === 'scale') body = `<div class="scale">${q.subs.map((s, k) => `<button type="button" data-v="${k + 1}${s ? ' (' + esc(s.toLowerCase()) + ')' : ''}"><b>${k + 1}</b><small>${esc(s)}</small></button>`).join('')}</div>`;
+  if (q.type === 'nps') body = `<div class="nps"><div class="scale">${Array.from({ length: 11 }, (_, k) => `<button type="button" data-v="${k}"><b>${k}</b></button>`).join('')}</div><div class="ends"><span>0 · ${esc(q.ends[0])}</span><span>10 · ${esc(q.ends[1])}</span></div></div>`;
+  if (q.type === 'text') body = `<textarea rows="4" placeholder="Escribí tu respuesta…"></textarea>`;
+  const msg = q.type === 'text' ? 'Esta pregunta es obligatoria.' : 'Elegí una opción para continuar.';
+  return `<div class="q" data-q="${q.id}"${q.showIf ? ' hidden' : ''}>
+    <div class="qh"><div class="qn" data-num></div><div class="ql">${label}</div></div>
+    ${q.hint ? `<div class="hint">${esc(q.hint)}</div>` : ''}
+    ${body}<div class="msg">${msg}</div></div>`;
+}
+
+STEPS.forEach((list, i) => {
+  const box = $('#s' + i);
+  box.style.cssText = 'display:flex;flex-direction:column;gap:36px';
+  box.innerHTML = list.map(qHTML).join('');
+});
+// Opciones del bloque Oracle
+$$('[data-opts]').forEach(el => { el.innerHTML = el.dataset.opts.split('|').map(o => `<button type="button" data-v="${esc(o)}">${esc(o)}</button>`).join(''); });
+
+function renumber() {
+  let n = 0;
+  $$('.q').forEach(q => { if (!q.hidden && !q.closest('[hidden]')) $('[data-num]', q).textContent = String(++n).padStart(2, '0'); });
+}
+
+// ---------- Interacción ----------
+function setAns(id, v) {
+  state.a[id] = v;
+  const q = $(`.q[data-q="${id}"]`);
+  if (q) q.classList.remove('err');
+  refreshConditional();
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('.opts button, .scale button');
+  if (!b) return;
+  const q = b.closest('.q');
+  $$('button', q).forEach(x => x.classList.toggle('on', x === b));
+  setAns(q.dataset.q, b.dataset.v);
+});
+document.addEventListener('input', e => {
+  const t = e.target.closest('.q textarea');
+  if (t) setAns(t.closest('.q').dataset.q, t.value);
+});
+
+function refreshConditional() {
+  STEPS.flat().filter(q => q.showIf).forEach(q => {
+    const el = $(`.q[data-q="${q.id}"]`);
+    const show = q.showIf(state.a);
+    if (el.hidden === show) el.hidden = !show;
+    if (!show) { delete state.a[q.id]; $$('button', el).forEach(x => x.classList.remove('on')); }
+  });
+  const wants = state.a.oracle === ORACLE_YES;
+  $('#tvbox').hidden = !wants;
+  $('#nombreStar').textContent = wants ? '*' : '';
+  $('#nombreOpt').textContent = wants ? '' : '(opcional)';
+  $('#nombreHint').textContent = wants
+    ? 'Lo necesitamos para asociar el acceso a tu cuenta. Al pedir el regalo, esta respuesta deja de ser anónima.'
+    : 'De manera opcional y solo si vos querés, podés dejarnos tu nombre y apellido. Nos puede servir para charlar algún feedback directamente con vos por privado.';
+  renumber();
+}
+
+// ---------- Usuario de TradingView ----------
+function cleanTV(v) {
+  v = String(v || '').trim();
+  const m = v.match(/tradingview\.com\/u\/([^\/?#\s]+)/i);
+  if (m) v = m[1];
+  return v.replace(/^@+/, '').trim();
+}
+function tvProblem(u) {
+  if (!u) return 'Ingresá tu usuario de TradingView.';
+  if (u.includes('@')) return 'Eso parece un email. Necesitamos tu nombre de usuario de TradingView, no tu email.';
+  if (/\s/.test(u)) return 'El usuario de TradingView no lleva espacios. Revisalo en tu perfil.';
+  if (!/^[A-Za-z0-9_.\-]{2,40}$/.test(u)) return 'Revisá el usuario: solo puede tener letras, números, guiones o puntos.';
+  return '';
+}
+$('#tv').addEventListener('input', e => {
+  const u = cleanTV(e.target.value);
+  state.a.tradingview = u;
+  $('.q[data-q="tradingview"]').classList.remove('err');
+  const pv = $('#tvPreview');
+  if (u && !tvProblem(u)) {
+    pv.innerHTML = `Vamos a habilitar el acceso a <b style="color:#fff">@${esc(u)}</b>. Verificá que sea tu perfil: <a href="https://www.tradingview.com/u/${encodeURIComponent(u)}/" target="_blank" rel="noopener">tradingview.com/u/${esc(u)}</a>`;
+    pv.classList.add('show');
+  } else pv.classList.remove('show');
+});
+$('#tv').addEventListener('blur', e => { const u = cleanTV(e.target.value); if (u !== e.target.value) e.target.value = u; });
+$('#nombre').addEventListener('input', e => { state.a.nombre = e.target.value; $('.q[data-q="nombre"]').classList.remove('err'); });
+
+// ---------- Validación y navegación ----------
+function validateStep(i) {
+  let firstBad = null;
+  const bad = el => { el.classList.add('err'); firstBad = firstBad || el; };
+  if (i < 2) {
+    STEPS[i].forEach(q => {
+      const el = $(`.q[data-q="${q.id}"]`);
+      if (el.hidden || q.req === false) return;
+      if (!String(state.a[q.id] || '').trim()) bad(el);
+    });
+  } else {
+    if (!state.a.oracle) bad($('.q[data-q="oracle"]'));
+    if (state.a.oracle === ORACLE_YES) {
+      const p = tvProblem(state.a.tradingview);
+      if (p) { $('#tvMsg').textContent = p; bad($('.q[data-q="tradingview"]')); }
+      if (!String(state.a.nombre || '').trim()) bad($('.q[data-q="nombre"]'));
+    }
+  }
+  if (firstBad) firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return !firstBad;
+}
+
+function show(step) {
+  state.step = step;
+  $$('.step').forEach(s => s.classList.toggle('active', +s.dataset.step === step));
+  $('#done').classList.toggle('active', step === 3);
+  $('#progress').style.display = step === 3 ? 'none' : 'flex';
+  $('#stepLabel').textContent = `PASO ${step + 1} DE 3`;
+  $$('.bars div').forEach((b, k) => b.classList.toggle('on', k <= step));
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+}
+
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]');
+  if (!g) return;
+  if (g.dataset.go === 'back') { $$('.q.err').forEach(q => q.classList.remove('err')); show(state.step - 1); }
+  else if (validateStep(state.step)) show(state.step + 1);
+});
+
+// ---------- Envío (igual que la encuesta de mitad: form POST a Apps Script) ----------
+$('#submit').addEventListener('click', () => {
+  if (state.sending || !validateStep(2)) return;
+  const err = $('#sendError');
+  err.classList.remove('show');
+  const url = SCRIPT_URL.trim();
+  const a = state.a, wants = a.oracle === ORACLE_YES;
+  const data = { fecha: new Date().toISOString() };
+  STEPS.flat().forEach(q => { data[q.id] = a[q.id] || ''; });
+  data.oracle = wants ? 'Sí' : 'No';
+  data.tradingview = wants ? (a.tradingview || '') : '';
+  data.nombre = (a.nombre || '').trim();
+
+  if (!url) {
+    console.warn('Encuesta de cierre JI: falta SCRIPT_URL. Respuesta (no enviada):', data);
+    err.textContent = 'La encuesta todavía no está conectada a la planilla (falta SCRIPT_URL). Tu respuesta no se envió.';
+    err.classList.add('show');
+    return;
+  }
+  state.sending = true;
+  const btn = $('#submit'); btn.disabled = true; btn.textContent = 'Enviando…';
+  try {
+    const name = 'ji_sink_' + Date.now();
+    const ifr = document.createElement('iframe'); ifr.name = name; ifr.style.display = 'none'; document.body.appendChild(ifr);
+    const f = document.createElement('form'); f.method = 'POST'; f.action = url; f.target = name; f.style.display = 'none';
+    Object.entries(data).forEach(([k, v]) => { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i); });
+    document.body.appendChild(f); f.submit();
+    setTimeout(() => { f.remove(); ifr.remove(); }, 15000);
+    setTimeout(() => {
+      $('#doneText').innerHTML = wants
+        ? `Recibimos tu feedback y tu pedido de <b>Oracle Numeris</b>. Vamos a habilitar el acceso por 6 meses en la cuenta <b>@${esc(data.tradingview)}</b> de TradingView. Gracias por haber sido parte del Programa Joven Inversor.`
+        : 'Recibimos tu feedback. Gracias por haber sido parte del Programa Joven Inversor.';
+      state.sending = false; btn.disabled = false; btn.textContent = 'Enviar';
+      show(3);
+    }, 1200);
+  } catch (e) {
+    state.sending = false; btn.disabled = false; btn.textContent = 'Enviar';
+    err.textContent = 'No pudimos enviar tu respuesta. Revisá tu conexión e intentá de nuevo.';
+    err.classList.add('show');
+  }
+});
+
+$('#reset').addEventListener('click', () => {
+  state.a = {};
+  $$('.on').forEach(b => { if (b.closest('.opts, .scale')) b.classList.remove('on'); });
+  $$('textarea, input[type=text]').forEach(x => x.value = '');
+  $('#tvPreview').classList.remove('show');
+  refreshConditional();
+  show(0);
+});
+
+refreshConditional();
+</script>
+</body>
+</html>
