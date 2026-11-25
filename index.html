@@ -147,10 +147,15 @@
         </div>
         <div class="note">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9C00" stroke-width="2"><path d="M4 10H20V21H4Z"/><path d="M8 10V3H16V10"/><path d="M12 14V17"/></svg>
-          <div>Tu feedback es anónimo, salvo que elijas dejarnos tu nombre o pedir el regalo del final. Solo lo leemos nosotros. ¡Muchas gracias!</div>
+          <div>Te pedimos tu nombre para poder darle seguimiento a tu feedback. Tus respuestas solo las lee el equipo de Joven Inversor. ¡Muchas gracias!</div>
         </div>
       </div>
       <div class="sect"><div class="t">Para encuadrar mejor tus comentarios</div><div class="s">Respondenos estas preguntas rápidas.</div></div>
+      <div class="q" data-q="nombre">
+        <div class="qh"><div class="qn" data-num></div><div class="ql">Nombre y apellido <span class="star">*</span></div></div>
+        <input type="text" id="nombre" autocomplete="name" placeholder="Tu nombre y apellido">
+        <div class="msg">Esta pregunta es obligatoria.</div>
+      </div>
       <div id="s0"></div>
       <div class="actions">
         <button type="button" class="btn-main" data-go="next">
@@ -211,12 +216,6 @@
         </div>
       </div>
 
-      <div class="q" data-q="nombre">
-        <div class="qh"><div class="qn" data-num></div><div class="ql">Nombre y apellido <span class="star" id="nombreStar"></span><span class="opt" id="nombreOpt">(opcional)</span></div></div>
-        <div class="hint" id="nombreHint">De manera opcional y solo si vos querés, podés dejarnos tu nombre y apellido. Nos puede servir para charlar algún feedback directamente con vos por privado.</div>
-        <input type="text" id="nombre" autocomplete="name" placeholder="Tu nombre y apellido">
-        <div class="msg">Necesitamos tu nombre para asociar el acceso a tu cuenta.</div>
-      </div>
 
       <div class="alert" id="sendError"></div>
       <div class="actions">
@@ -330,11 +329,6 @@ function refreshConditional() {
   });
   const wants = state.a.oracle === ORACLE_YES;
   $('#tvbox').hidden = !wants;
-  $('#nombreStar').textContent = wants ? '*' : '';
-  $('#nombreOpt').textContent = wants ? '' : '(opcional)';
-  $('#nombreHint').textContent = wants
-    ? 'Lo necesitamos para asociar el acceso a tu cuenta. Al pedir el regalo, esta respuesta deja de ser anónima.'
-    : 'De manera opcional y solo si vos querés, podés dejarnos tu nombre y apellido. Nos puede servir para charlar algún feedback directamente con vos por privado.';
   renumber();
 }
 
@@ -370,6 +364,7 @@ function validateStep(i) {
   let firstBad = null;
   const bad = el => { el.classList.add('err'); firstBad = firstBad || el; };
   if (i < 2) {
+    if (i === 0 && !String(state.a.nombre || '').trim()) bad($('.q[data-q="nombre"]'));
     STEPS[i].forEach(q => {
       const el = $(`.q[data-q="${q.id}"]`);
       if (el.hidden || q.req === false) return;
@@ -380,7 +375,6 @@ function validateStep(i) {
     if (state.a.oracle === ORACLE_YES) {
       const p = tvProblem(state.a.tradingview);
       if (p) { $('#tvMsg').textContent = p; bad($('.q[data-q="tradingview"]')); }
-      if (!String(state.a.nombre || '').trim()) bad($('.q[data-q="nombre"]'));
     }
   }
   if (firstBad) firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
